@@ -1,7 +1,7 @@
 using System.Net;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Newtonsoft.Json.Linq;
+using PCL.Core.App;
 using PCL.Core.App.Localization;
 using PCL.Core.UI.Controls;
 using PCL.Network;
@@ -10,7 +10,7 @@ namespace PCL;
 
 public partial class MyMsgLogin
 {
-    private readonly JObject Data;
+    private readonly JsonObject Data;
     private string DeviceCode; // 用于轮询的设备代码
     private string OAuthUrl = ""; // OAuth 轮询验证地址
     private string UserCode; // 需要用户在网页上输入的设备代码
@@ -76,7 +76,7 @@ public partial class MyMsgLogin
         {
             try
             {
-                var bodyData = $"grant_type=urn:ietf:params:oauth:grant-type:device_code&client_id={ModSecret.OAuthClientId}&device_code={DeviceCode}&scope=XboxLive.signin%20offline_access";
+                var bodyData = $"grant_type=urn:ietf:params:oauth:grant-type:device_code&client_id={Secrets.MSOAuthClientId}&device_code={DeviceCode}&scope=XboxLive.signin%20offline_access";
 
                 var Result = Requester.Fetch(
                     "https://login.microsoftonline.com/consumers/oauth2/v2.0/token",
@@ -88,7 +88,7 @@ public partial class MyMsgLogin
                         Timeout = 5000 + UnknownFailureCount * 5000, MakeLog = false
                     });
                 // 获取结果
-                var ResultJson = (JObject)ModBase.GetJson(Result);
+                var ResultJson = (JsonObject)ModBase.GetJson(Result);
                 ModProfile.ProfileLog($"令牌过期时间：{ResultJson["expires_in"]} 秒");
                 ModMain.Hint(Lang.Text("Launch.Account.LoginDialog.Success"), ModMain.HintType.Finish);
                 Finished(new[] { ResultJson["access_token"].ToString(), ResultJson["refresh_token"].ToString() });
@@ -132,7 +132,7 @@ public partial class MyMsgLogin
             Btn3.Name += ModBase.GetUuid();
             MyConverter = Converter;
             ShapeLine.StrokeThickness = ModBase.GetWPFSize(1d);
-            Data = (JObject)Converter.Content;
+            Data = (JsonObject)Converter.Content;
             OAuthUrl = Converter.AuthUrl?.ToString() ?? "";
             Init();
         }
